@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
+import { create as requestAccess } from '@/routes/access-requests';
 import { ti, usuario } from '@/routes/login';
 </script>
 
@@ -136,6 +137,29 @@ import { ti, usuario } from '@/routes/login';
                         Entrar
                     </Link>
                 </div>
+            </div>
+
+            <div class="mt-8 flex justify-center">
+                <Link
+                    :href="requestAccess()"
+                    class="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-medium text-gray-300 transition-colors hover:border-white/20 hover:text-white"
+                >
+                    <svg
+                        class="h-4 w-4"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.75"
+                    >
+                        <circle cx="9" cy="8" r="3" />
+                        <path
+                            stroke-linecap="round"
+                            d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"
+                        />
+                        <path stroke-linecap="round" d="M16 8h6M19 5v6" />
+                    </svg>
+                    Solicitar acesso
+                </Link>
             </div>
 
             <div class="mt-10 border-t border-white/10 pt-6 text-center">

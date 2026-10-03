@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AccessRequestController;
 use App\Http\Controllers\Auth\LoginController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -7,6 +8,12 @@ use Inertia\Inertia;
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'show'])
         ->name('login');
+
+    Route::get('/solicitar-acesso', [AccessRequestController::class, 'create'])
+        ->name('access-requests.create');
+
+    Route::post('/solicitar-acesso', [AccessRequestController::class, 'store'])
+        ->name('access-requests.store');
 
     Route::get('/login/usuario', function () {
         return Inertia::render('Auth/LoginForm', ['type' => 'usuario']);
