@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AccessRequestController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -9,8 +10,9 @@ Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'show'])
         ->name('login');
 
-    Route::get('/solicitar-acesso', [AccessRequestController::class, 'create'])
-        ->name('access-requests.create');
+    Route::get('/solicitar-acesso', function () {
+        return redirect()->route('login', ['solicitar-acesso' => 1]);
+    })->name('access-requests.show');
 
     Route::post('/solicitar-acesso', [AccessRequestController::class, 'store'])
         ->name('access-requests.store');
@@ -32,8 +34,7 @@ Route::middleware('auth')->group(function () {
         ->name('logout');
 
     Route::middleware('role:ti')->group(function () {
-        Route::get('/dashboard', function () {
-            return Inertia::render('Dashboard');
-        })->name('dashboard');
+        Route::get('/dashboard', [DashboardController::class, 'index'])
+            ->name('dashboard');
     });
 });

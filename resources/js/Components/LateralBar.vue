@@ -2,11 +2,12 @@
 import { computed, ref } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { dashboard, kanban, logout, settings } from '@/routes';
+import { index as accessRequestsIndex } from '@/routes/access-requests';
 import {
     create as createRequest,
     index as requestsIndex,
 } from '@/routes/requests';
-import { index as ticketsIndex } from '@/routes/tickets';
+import { index as usersIndex } from '@/routes/users';
 import type { UserRole } from '@/types/auth';
 import type { RouteDefinition } from '@/wayfinder';
 
@@ -30,7 +31,7 @@ const allNavigation: {
     },
     {
         name: 'Solicitações',
-        href: ticketsIndex(),
+        href: accessRequestsIndex(),
         icon: 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',
         roles: ['ti'],
     },
@@ -44,12 +45,18 @@ const allNavigation: {
         name: 'Nova solicitação',
         href: createRequest(),
         icon: 'M12 5v14M5 12h14',
-        roles: ['user'],
+        roles: ['user', 'ti'],
     },
     {
         name: 'Kanban',
         href: kanban(),
         icon: 'M3 4h5v16H3zM10 4h5v10h-5zM17 4h4v7h-4z',
+        roles: ['ti'],
+    },
+    {
+        name: 'Usuários',
+        href: usersIndex(),
+        icon: 'M9 20H4v-2a4 4 0 0 1 4-4h2a4 4 0 0 1 4 4v2h-5Zm0-9a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm9 9v-2a4 4 0 0 0-3-3.87M15 4.13A4 4 0 0 1 15 12',
         roles: ['ti'],
     },
     {
@@ -247,6 +254,20 @@ const signOut = () => {
         <!-- Page content -->
         <main class="lg:pl-64">
             <div class="px-4 py-6 sm:px-6 lg:px-8">
+                <div
+                    v-if="page.props.flash.success"
+                    class="mb-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-300"
+                >
+                    {{ page.props.flash.success }}
+                </div>
+
+                <div
+                    v-if="page.props.flash.error"
+                    class="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-300"
+                >
+                    {{ page.props.flash.error }}
+                </div>
+
                 <slot />
             </div>
         </main>

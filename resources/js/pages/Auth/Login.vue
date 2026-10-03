@@ -1,7 +1,51 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
-import { create as requestAccess } from '@/routes/access-requests';
+import { onMounted, ref } from 'vue';
+import { Link, useForm } from '@inertiajs/vue3';
+import Modal from '@/Components/Modal.vue';
+import { store as storeAccessRequest } from '@/routes/access-requests';
 import { ti, usuario } from '@/routes/login';
+
+const showAccessRequestModal = ref(false);
+const requestSubmitted = ref(false);
+
+const form = useForm({
+    name: '',
+    email: '',
+    reason: '',
+});
+
+const openAccessRequestModal = () => {
+    requestSubmitted.value = false;
+    form.reset();
+    form.clearErrors();
+    showAccessRequestModal.value = true;
+};
+
+onMounted(() => {
+    const params = new URLSearchParams(window.location.search);
+
+    if (params.has('solicitar-acesso')) {
+        openAccessRequestModal();
+        params.delete('solicitar-acesso');
+
+        const query = params.toString();
+        window.history.replaceState(
+            {},
+            '',
+            window.location.pathname + (query ? `?${query}` : ''),
+        );
+    }
+});
+
+const submitAccessRequest = () => {
+    form.post(storeAccessRequest().url, {
+        preserveScroll: true,
+        onSuccess: () => {
+            requestSubmitted.value = true;
+            form.reset();
+        },
+    });
+};
 </script>
 
 <template>
@@ -140,9 +184,10 @@ import { ti, usuario } from '@/routes/login';
             </div>
 
             <div class="mt-8 flex justify-center">
-                <Link
-                    :href="requestAccess()"
+                <button
+                    type="button"
                     class="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-5 py-2.5 text-sm font-medium text-gray-300 transition-colors hover:border-white/20 hover:text-white"
+                    @click="openAccessRequestModal"
                 >
                     <svg
                         class="h-4 w-4"
@@ -159,7 +204,7 @@ import { ti, usuario } from '@/routes/login';
                         <path stroke-linecap="round" d="M16 8h6M19 5v6" />
                     </svg>
                     Solicitar acesso
-                </Link>
+                </button>
             </div>
 
             <div class="mt-10 border-t border-white/10 pt-6 text-center">
@@ -169,5 +214,146 @@ import { ti, usuario } from '@/routes/login';
                 </p>
             </div>
         </div>
+
+        <Modal
+            :open="showAccessRequestModal"
+            @close="showAccessRequestModal = false"
+        >
+            <div
+                class="rounded-2xl border border-white/10 bg-slate-900 p-8 shadow-2xl shadow-black/50"
+            >
+                <div class="flex items-start justify-between">
+                    <div>
+                        <h2 class="text-lg font-bold text-white">
+                            Solicitar acesso
+                        </h2>
+                        <p class="mt-1 text-sm text-gray-400">
+                            Preencha os dados abaixo e nossa equipe entrará em
+                            contato.
+                        </p>
+                    </div>
+
+                    <button
+                        type="button"
+                        class="-mt-1 -mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-gray-400 hover:bg-white/5 hover:text-white"
+                        aria-label="Fechar"
+                        @click="showAccessRequestModal = false"
+                    >
+                        <svg
+                            class="h-5 w-5"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M6 18 18 6M6 6l12 12"
+                            />
+                        </svg>
+                    </button>
+                </div>
+
+                <div
+                    v-if="requestSubmitted"
+                    class="mt-6 rounded-lg border border-emerald-500/20 bg-emerald-500/10 p-4 text-center text-sm text-emerald-300"
+                >
+                    Solicitação enviada com sucesso! Em breve entraremos em
+                    contato.
+                </div>
+
+                <form
+                    v-else
+                    class="mt-6 space-y-4"
+                    @submit.prevent="submitAccessRequest"
+                >
+                    <div>
+                        <label
+                            for="name"
+                            class="mb-1.5 block text-sm font-medium text-gray-300"
+                        >
+                            Nome
+                        </label>
+
+                        <input
+                            id="name"
+                            v-model="form.name"
+                            type="text"
+                            required
+                            autofocus
+                            class="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none focus:border-white/30 focus:ring-1 focus:ring-indigo-500/50"
+                        />
+
+                        <p
+                            v-if="form.errors.name"
+                            class="mt-1.5 text-sm text-red-400"
+                        >
+                            {{ form.errors.name }}
+                        </p>
+                    </div>
+
+                    <div>
+                        <label
+                            for="email"
+                            class="mb-1.5 block text-sm font-medium text-gray-300"
+                        >
+                            E-mail
+                        </label>
+
+                        <input
+                            id="email"
+                            v-model="form.email"
+                            type="email"
+                            required
+                            class="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none focus:border-white/30 focus:ring-1 focus:ring-indigo-500/50"
+                        />
+
+                        <p
+                            v-if="form.errors.email"
+                            class="mt-1.5 text-sm text-red-400"
+                        >
+                            {{ form.errors.email }}
+                        </p>
+                    </div>
+
+                    <div>
+                        <label
+                            for="reason"
+                            class="mb-1.5 block text-sm font-medium text-gray-300"
+                        >
+                            Motivo
+                        </label>
+
+                        <textarea
+                            id="reason"
+                            v-model="form.reason"
+                            rows="3"
+                            required
+                            class="w-full resize-none rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none focus:border-white/30 focus:ring-1 focus:ring-indigo-500/50"
+                        />
+
+                        <p
+                            v-if="form.errors.reason"
+                            class="mt-1.5 text-sm text-red-400"
+                        >
+                            {{ form.errors.reason }}
+                        </p>
+                    </div>
+
+                    <button
+                        type="submit"
+                        :disabled="form.processing"
+                        class="w-full rounded-lg bg-linear-to-r from-indigo-600 to-purple-600 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+                    >
+                        {{
+                            form.processing
+                                ? 'Enviando...'
+                                : 'Enviar solicitação'
+                        }}
+                    </button>
+                </form>
+            </div>
+        </Modal>
     </div>
 </template>

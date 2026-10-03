@@ -49,11 +49,16 @@ test('a regular user cannot access ti-only routes', function () {
     $this->actingAs($user)->get('/kanban')->assertForbidden();
 });
 
-test('a ti user cannot access user-only routes', function () {
+test('a ti user cannot access the user-only "my requests" list', function () {
     $user = User::factory()->create(['role' => UserRole::Ti]);
 
     $this->actingAs($user)->get('/requests')->assertForbidden();
-    $this->actingAs($user)->get('/requests/create')->assertForbidden();
+});
+
+test('a ti user can access the new-request form, like a regular user', function () {
+    $user = User::factory()->create(['role' => UserRole::Ti]);
+
+    $this->actingAs($user)->get('/requests/create')->assertOk();
 });
 
 test('both roles can access settings', function () {
