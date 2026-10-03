@@ -6,32 +6,51 @@ import {
     create as createRequest,
     index as requestsIndex,
 } from '@/routes/requests';
+import { index as ticketsIndex } from '@/routes/tickets';
+import type { UserRole } from '@/types/auth';
+import type { RouteDefinition } from '@/wayfinder';
 
 const page = usePage();
 const mobileOpen = ref(false);
 
 const user = computed(() => page.props.auth.user);
 
-const navigation = [
+const allNavigation: {
+    name: string;
+    href: RouteDefinition<'get'>;
+    icon: string;
+    roles: UserRole[];
+    circles?: { cx: number; cy: number; r: number }[];
+}[] = [
     {
         name: 'Dashboard',
         href: dashboard(),
         icon: 'M3 12l9-9 9 9M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10',
+        roles: ['ti'],
+    },
+    {
+        name: 'Solicitações',
+        href: ticketsIndex(),
+        icon: 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',
+        roles: ['ti'],
     },
     {
         name: 'Minhas solicitações',
         href: requestsIndex(),
         icon: 'M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01',
+        roles: ['user'],
     },
     {
         name: 'Nova solicitação',
         href: createRequest(),
         icon: 'M12 5v14M5 12h14',
+        roles: ['user'],
     },
     {
         name: 'Kanban',
         href: kanban(),
         icon: 'M3 4h5v16H3zM10 4h5v10h-5zM17 4h4v7h-4z',
+        roles: ['ti'],
     },
     {
         name: 'Configurações',
@@ -41,8 +60,13 @@ const navigation = [
             { cx: 17, cy: 6, r: 2 },
             { cx: 8, cy: 18, r: 2 },
         ],
+        roles: ['user', 'ti'],
     },
-] as const;
+];
+
+const navigation = computed(() =>
+    allNavigation.filter((item) => item.roles.includes(user.value.role)),
+);
 
 const isActive = (url: string) => page.url === url;
 

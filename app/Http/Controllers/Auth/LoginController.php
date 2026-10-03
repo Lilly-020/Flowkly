@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class LoginController extends Controller
@@ -16,21 +18,31 @@ class LoginController extends Controller
 
     public function login(Request $request)
     {
-        // Validação
-        $credentials = $request->validate([
+        $data = $request->validate([
+            'type' => ['required', Rule::in(['usuario', 'ti'])],
             'email' => ['required', 'email'],
             'password' => ['required'],
         ]);
 
-        if (Auth::attempt($credentials)) {
-            $request->session()->regenerate();
+        $type = $data['type'] === 'ti' ? UserRole::Ti : UserRole::User;
 
-            return redirect()->intended('dashboard');
+        if (! Auth::attempt($request->only('email', 'password'))) {
+            return back()->withErrors([
+                'email' => 'E-mail ou senha inválidos.',
+            ]);
         }
 
-        return back()->withErrors([
-            'email' => 'E-mail ou senha inválidos.',
-        ]);
+        if (Auth::user()->role !== $type) {
+            Auth::logout();
+
+            return back()->withErrors([
+                'email' => 'Esta conta não tem acesso a este portal.',
+            ]);
+        }
+
+        $request->session()->regenerate();
+
+        return redirect()->intended(route($type->homeRouteName()));
     }
 
     public function logout(Request $request)
