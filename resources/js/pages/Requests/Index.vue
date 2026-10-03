@@ -1,18 +1,13 @@
 <script setup>
-import { usePage } from '@inertiajs/vue3';
 import LateralBar from '@/Components/LateralBar.vue';
-
-const page = usePage();
 </script>
 
 <template>
     <LateralBar>
         <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">
-            Dashboard
+            Minhas solicitações
         </h1>
 
-        <p class="mt-2 text-gray-600 dark:text-gray-400">
-            Bem-vindo, {{ page.props.auth.user.name }}
-        </p>
+        <p class="mt-2 text-gray-600 dark:text-gray-400">Em construção.</p>
     </LateralBar>
 </template>
