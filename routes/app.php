@@ -20,6 +20,22 @@ Route::middleware(['auth', 'role:user,ti'])->group(function () {
         ->name('requests.store');
 });
 
+Route::middleware('auth')->group(function () {
+    // Authorization (TI can always manage; the owning user only while
+    // the ticket is still "Aberto") is enforced by TicketPolicy.
+    Route::put('/tickets/{ticket}', [TicketController::class, 'update'])
+        ->name('tickets.update');
+
+    Route::delete('/tickets/{ticket}', [TicketController::class, 'destroy'])
+        ->name('tickets.destroy');
+
+    Route::get('/settings', [SettingsController::class, 'show'])
+        ->name('settings');
+
+    Route::post('/settings/password', [SettingsController::class, 'updatePassword'])
+        ->name('settings.password');
+});
+
 Route::middleware(['auth', 'role:ti'])->group(function () {
     Route::get('/solicitacoes', [AccessRequestController::class, 'index'])
         ->name('access-requests.index');
@@ -33,26 +49,12 @@ Route::middleware(['auth', 'role:ti'])->group(function () {
     Route::get('/kanban', [KanbanController::class, 'index'])
         ->name('kanban');
 
-    Route::put('/tickets/{ticket}', [TicketController::class, 'update'])
-        ->name('tickets.update');
-
     Route::patch('/tickets/{ticket}/status', [TicketController::class, 'updateStatus'])
         ->name('tickets.status');
-
-    Route::delete('/tickets/{ticket}', [TicketController::class, 'destroy'])
-        ->name('tickets.destroy');
 
     Route::get('/usuarios', [UserController::class, 'index'])
         ->name('users.index');
 
     Route::post('/usuarios/{user}/redefinir-senha', [UserController::class, 'resetPassword'])
         ->name('users.reset-password');
-});
-
-Route::middleware('auth')->group(function () {
-    Route::get('/settings', [SettingsController::class, 'show'])
-        ->name('settings');
-
-    Route::post('/settings/password', [SettingsController::class, 'updatePassword'])
-        ->name('settings.password');
 });

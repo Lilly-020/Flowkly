@@ -124,13 +124,97 @@ test('ti can delete a ticket', function () {
     $this->assertDatabaseMissing('tickets', ['id' => $ticket->id]);
 });
 
-test('a regular user cannot update or delete tickets', function () {
+test('a regular user cannot change ticket status or manage someone else\'s ticket', function () {
     $user = User::factory()->create(['role' => UserRole::User]);
     $ticket = Ticket::factory()->create();
 
     $this->actingAs($user)->patch("/tickets/{$ticket->id}/status", ['status' => 'concluida'])
         ->assertForbidden();
 
+    $this->actingAs($user)->put("/tickets/{$ticket->id}", [
+        'title' => 'Hijacked',
+        'description' => $ticket->description,
+        'type' => $ticket->type->value,
+    ])->assertForbidden();
+
     $this->actingAs($user)->delete("/tickets/{$ticket->id}")
         ->assertForbidden();
+});
+
+test('the owner can edit and delete their own ticket while it is still aberta', function () {
+    $owner = User::factory()->create(['role' => UserRole::User]);
+    $ticket = Ticket::factory()->create([
+        'user_id' => $owner->id,
+        'status' => TicketStatus::Aberta,
+        'title' => 'Old title',
+    ]);
+
+    $this->actingAs($owner)
+        ->put("/tickets/{$ticket->id}", [
+            'title' => 'New title',
+            'description' => $ticket->description,
+            'type' => $ticket->type->value,
+        ])
+        ->assertRedirect();
+
+    expect($ticket->fresh()->title)->toBe('New title');
+
+    $this->actingAs($owner)
+        ->delete("/tickets/{$ticket->id}")
+        ->assertRedirect();
+
+    $this->assertDatabaseMissing('tickets', ['id' => $ticket->id]);
+});
+
+test('the owner cannot edit or delete their ticket once it is no longer aberta', function () {
+    $owner = User::factory()->create(['role' => UserRole::User]);
+    $ticket = Ticket::factory()->create([
+        'user_id' => $owner->id,
+        'status' => TicketStatus::EmAndamento,
+    ]);
+
+    $this->actingAs($owner)
+        ->put("/tickets/{$ticket->id}", [
+            'title' => 'New title',
+            'description' => $ticket->description,
+            'type' => $ticket->type->value,
+        ])
+        ->assertForbidden();
+
+    $this->actingAs($owner)
+        ->delete("/tickets/{$ticket->id}")
+        ->assertForbidden();
+});
+
+test('the requests index can be filtered by title, type, status and date range', function () {
+    $user = User::factory()->create(['role' => UserRole::User]);
+
+    $match = Ticket::factory()->create([
+        'user_id' => $user->id,
+        'title' => 'Impressora sem tinta',
+        'type' => 'hardware',
+        'status' => TicketStatus::Aberta,
+        'created_at' => '2026-01-10',
+    ]);
+    Ticket::factory()->create([
+        'user_id' => $user->id,
+        'title' => 'Acesso ao sistema',
+        'type' => 'acesso',
+        'status' => TicketStatus::Concluida,
+        'created_at' => '2026-02-15',
+    ]);
+
+    $this->actingAs($user)
+        ->get('/requests?'.http_build_query([
+            'title' => 'Impressora',
+            'type' => 'hardware',
+            'status' => 'aberta',
+            'from' => '2026-01-01',
+            'to' => '2026-01-31',
+        ]))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->has('tickets', 1)
+            ->where('tickets.0.id', $match->id)
+        );
 });

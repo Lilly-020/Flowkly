@@ -13,6 +13,8 @@ const props = defineProps<{
 
 const search = ref('');
 const typeFilter = ref('');
+const dateFrom = ref('');
+const dateTo = ref('');
 
 const columns: { status: TicketStatus; label: string; dot: string }[] = [
     { status: 'aberta', label: 'Aberto', dot: 'bg-amber-400' },
@@ -57,8 +59,11 @@ const filteredTickets = computed(() =>
             .includes(search.value.toLowerCase());
         const matchesType =
             !typeFilter.value || ticket.type === typeFilter.value;
+        const ticketDate = ticket.created_at.slice(0, 10);
+        const matchesFrom = !dateFrom.value || ticketDate >= dateFrom.value;
+        const matchesTo = !dateTo.value || ticketDate <= dateTo.value;
 
-        return matchesSearch && matchesType;
+        return matchesSearch && matchesType && matchesFrom && matchesTo;
     }),
 );
 
@@ -211,6 +216,20 @@ const historyLabel = (
                     {{ type.label }}
                 </option>
             </select>
+
+            <input
+                v-model="dateFrom"
+                type="date"
+                aria-label="De"
+                class="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-900 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+            />
+
+            <input
+                v-model="dateTo"
+                type="date"
+                aria-label="Até"
+                class="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-900 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
+            />
         </div>
 
         <div class="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
